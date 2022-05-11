@@ -1,75 +1,42 @@
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import Components from 'unplugin-vue-components/vite'
-import { AntDesignVueResolver } from 'unplugin-vue-components/resolvers'
-import {
-  createStyleImportPlugin,
-  AndDesignVueResolve
-} from 'vite-plugin-style-import'
-import viteCompression from 'vite-plugin-compression'
-import AutoImport from 'unplugin-auto-import/vite'
-import { generateModifyVars } from './src/config'
+import { UserConfig, ConfigEnv } from 'vite'
 import { resolve } from 'path'
+import { createVitePlugin } from './config/vite/plugin'
+import { configManualChunk } from './config/vite/optimizer'
+import { generateModifyVars } from './config/themeConfig';
+import { setupProxy } from './config/vite/proxy'
 
-export default defineConfig({
-  resolve: {
-    alias: {
-      '@': resolve(__dirname, './src')
-    }
-  },
-  plugins: [
-    vue(),
-    Components({
-      resolvers: [
-        AntDesignVueResolver({
-          importLess: true
-        })
-      ],
-    }),
-    createStyleImportPlugin({
-      resolves: [AndDesignVueResolve()]
-    }),
-    viteCompression({
-      ext: '.gz',
-      threshold: 1024,
-      deleteOriginFile: true
-    }),
-    AutoImport({
-      imports: [
-        'vue',
-        'vue-router',
-        'pinia'
-      ],
-      dts: 'src/auto-imports.d.ts',
-      eslintrc: {
-        enabled: false,
-        filepath: './.eslintrc-auto-import.json',
-        globalsPropValue: true
+export default ({ mode }: ConfigEnv): UserConfig => {
+  return {
+    resolve: {
+      alias: {
+        '@': resolve(__dirname, './src')
       }
-    }),
-  ],
-  build: {
-    sourcemap: false,
-    brotliSize: false,
-    chunkSizeWarningLimit: 2000,
-  },
-  css: {
-    preprocessorOptions: {
-      less: {
-        modifyVars: generateModifyVars(),
-        javascriptEnabled: true
+    },
+    plugins: createVitePlugin(),
+    build: {
+      sourcemap: false,
+      brotliSize: false,
+      chunkSizeWarningLimit: 2000,
+      rollupOptions: {
+        output: {
+          manualChunks: configManualChunk
+        }
       }
-    }
-  },
-  server: {
-    open: true,
-    host: '0.0.0.0',
-    proxy: {
-      '/api': {
-        target: 'http://192.168.1.58:8002',
-        changeOrigin: true
-        // rewrite: (path) => path.replace(/^\/api/, '')
+    },
+    css: {
+      preprocessorOptions: {
+        less: {
+          modifyVars: generateModifyVars(),
+          javascriptEnabled: true
+        }
       }
-    }
-  },
-})
+    },
+    server: {
+      open: true,
+      host: '0.0.0.0',
+      cors: true,
+      port: 3000,
+      proxy: setupProxy(mode)
+    },
+  }
+}

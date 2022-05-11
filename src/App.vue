@@ -1,7 +1,9 @@
 <template>
   <img alt="Vue logo" src="./assets/logo.png" />
-  <a-button type="primary">click</a-button>
   <HelloWorld msg="Hello Vue 3 + TypeScript + Vite" />
+  <a-card>
+    <h1>dgfdgsf</h1>
+  </a-card>
 </template>
 
 <script setup lang="ts">
